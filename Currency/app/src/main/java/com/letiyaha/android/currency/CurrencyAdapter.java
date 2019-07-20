@@ -15,15 +15,27 @@ public class CurrencyAdapter extends RecyclerView.Adapter<CurrencyAdapter.Curren
 
     private final ListItemClickListener mOnClickListener;
 
-    private int mNumberItems;
+    private Currency mCurrencyData;
+    
+    private String[] mCurrencies;
 
     public interface ListItemClickListener {
         void onListItemClick(int clickedItemIndex);
     }
 
-    public CurrencyAdapter(int numberOfItems, ListItemClickListener listener) {
-        mNumberItems = numberOfItems;
+    public CurrencyAdapter(ListItemClickListener listener) {
         mOnClickListener = listener;
+    }
+
+    public void setCurrencyData(Currency currencyData) {
+        mCurrencyData = currencyData;
+        String[] currency = {mCurrencyData.getBaseCurrency()};
+        setFavoriteCurrencies(currency);
+    }
+
+    public void setFavoriteCurrencies(String[] currencies) {
+        mCurrencies = currencies;
+        notifyDataSetChanged();
     }
 
     @Override
@@ -40,17 +52,29 @@ public class CurrencyAdapter extends RecyclerView.Adapter<CurrencyAdapter.Curren
 
     @Override
     public void onBindViewHolder(CurrencyViewHolder holder, int position) {
-        holder.mTvCurrencyName.setText("USD");
-        holder.mTvMajCurrencyVal.setText("CAD $1.3054");
-        holder.mTvMinCurrencyVal.setText("1 CAD = 0.7661 USD");
+        String majorCurrency = mCurrencyData.getBaseCurrency();
+        String minorCurrency = mCurrencies[position];
+        holder.mTvCurrencyName.setText(minorCurrency);
+        if (position == 0) {
+            holder.mTvMajCurrencyVal.setText("1.0000");
+        } else {
+            String minCurrVal = mCurrencyData.getRates().get(minorCurrency);
+            holder.mTvMajCurrencyVal.setText(minCurrVal);
+            float exchange = 1 / Float.parseFloat(minCurrVal);
+            holder.mTvMinCurrencyVal.setText("1 " + minorCurrency + " = " + exchange + " " + majorCurrency);
+        }
     }
 
     @Override
     public int getItemCount() {
-        return mNumberItems;
+        if (mCurrencies == null) {
+            return 0;
+        } else {
+            return mCurrencies.length;
+        }
     }
 
-    class CurrencyViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    public class CurrencyViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         TextView mTvCurrencyName;
 

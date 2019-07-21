@@ -12,4 +12,13 @@
         android:layout_height="match_parent"
         />
 
+    <TextView
+        android:id="@+id/tv_error_msg"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/padding_16"
+        android:text="@string/error_message"
+        android:textSize="@dimen/text_sz_medium"
+        android:visibility="invisible" />
+
 </FrameLayout>

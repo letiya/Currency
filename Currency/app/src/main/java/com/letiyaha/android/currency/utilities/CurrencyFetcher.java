@@ -19,10 +19,17 @@ public class CurrencyFetcher implements LoaderManager.LoaderCallbacks<Currency> 
 
     private Context mContext;
     private CurrencyAdapter mCurrencyAdapter;
+    private FetchResultDisplay mFetchResultDisplay;
 
-    public CurrencyFetcher(Context context, CurrencyAdapter currencyAdapter) {
+    public CurrencyFetcher(Context context, CurrencyAdapter currencyAdapter, FetchResultDisplay fetchResultDisplay) {
         mContext = context;
         mCurrencyAdapter = currencyAdapter;
+        mFetchResultDisplay = fetchResultDisplay;
+    }
+
+    public interface FetchResultDisplay {
+        void showErrorMsg();
+        void showFetchResult();
     }
 
     @Override
@@ -58,7 +65,12 @@ public class CurrencyFetcher implements LoaderManager.LoaderCallbacks<Currency> 
 
     @Override
     public void onLoadFinished(Loader<Currency> loader, Currency currencyData) {
-        mCurrencyAdapter.setCurrencyData(currencyData);
+        if (currencyData == null) {
+            mFetchResultDisplay.showErrorMsg();
+        } else {
+            mCurrencyAdapter.setCurrencyData(currencyData);
+            mFetchResultDisplay.showFetchResult();
+        }
     }
 
     @Override

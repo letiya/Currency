@@ -2,4 +2,6 @@
     <string name="app_name">Currency</string>
     <string name="error_msg">No internet connection!</string>
     <string name="content_description_flag">Flag thumbnail</string>
+    <string name="app_detail_name">Currency Detail</string>
+    <string name="error_message">Check internet connection!</string>
 </resources>

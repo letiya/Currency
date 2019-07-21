@@ -28,6 +28,9 @@ public class CurrencyJsonUtils {
         try {
             JSONObject jsonObject = new JSONObject(json);
             String success = jsonObject.getString(JSON_SUCCESS);
+            if (success.equalsIgnoreCase("false")) {
+                return null;
+            }
             String timestamp = jsonObject.getString(JSON_TIMESTAMP);
             String base = jsonObject.getString(JSON_BASE);
             String date = jsonObject.getString(JSON_DATE);
@@ -39,12 +42,10 @@ public class CurrencyJsonUtils {
                 String key = keys.next();
                 ratesHashMap.put(key, rates.getString(key));
             }
-            if (success.equalsIgnoreCase("true")) {
-                currency.setTimestamp(timestamp);
-                currency.setBaseCurrency(base);
-                currency.setDate(date);
-                currency.setRates(ratesHashMap);
-            }
+            currency.setTimestamp(timestamp);
+            currency.setBaseCurrency(base);
+            currency.setDate(date);
+            currency.setRates(ratesHashMap);
         } catch (JSONException e) {
             e.printStackTrace();
         }

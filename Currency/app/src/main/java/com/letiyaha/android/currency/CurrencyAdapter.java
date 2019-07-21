@@ -52,6 +52,9 @@ public class CurrencyAdapter extends RecyclerView.Adapter<CurrencyAdapter.Curren
 
     @Override
     public void onBindViewHolder(CurrencyViewHolder holder, int position) {
+        if (mCurrencyData == null) {
+            return;
+        }
         String majorCurrency = mCurrencyData.getBaseCurrency();
         String minorCurrency = mCurrencies[position];
         holder.mTvCurrencyName.setText(minorCurrency);

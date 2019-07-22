@@ -38,6 +38,10 @@ public class CurrencyAdapter extends RecyclerView.Adapter<CurrencyAdapter.Curren
         notifyDataSetChanged();
     }
 
+    public Currency getCurrencyData() {
+        return mCurrencyData;
+    }
+
     @Override
     public CurrencyViewHolder onCreateViewHolder(ViewGroup viewGroup, int viewType) {
         Context context = viewGroup.getContext();

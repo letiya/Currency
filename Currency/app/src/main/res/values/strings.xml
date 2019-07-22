@@ -4,4 +4,8 @@
     <string name="content_description_flag">Flag thumbnail</string>
     <string name="app_detail_name">Currency Detail</string>
     <string name="error_message">Check internet connection!</string>
+    <string name="action_settings">Settings</string>
+
+    <string name="pref_currencies_key">key_currencies</string>
+    <string name="pref_currencies_label">Add More</string>
 </resources>

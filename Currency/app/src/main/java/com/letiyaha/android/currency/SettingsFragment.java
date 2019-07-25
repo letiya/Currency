@@ -5,6 +5,8 @@ import android.support.v14.preference.MultiSelectListPreference;
 import android.support.v7.preference.PreferenceFragmentCompat;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Created by Belle Lee on 7/21/2019.
@@ -33,22 +35,35 @@ public class SettingsFragment extends PreferenceFragmentCompat {
         Bundle bundle = getArguments();
         if (bundle != null){
             Currency currencyData = bundle.getParcelable(CURRENCY_DATA);
-            setupCurrenciesPref(currencyData.getCurrencies());
+            setupCurrenciesPref(currencyData);
         }
-
     }
 
-    private void setupCurrenciesPref(ArrayList<String> currenciesArray) {
+    private void setupCurrenciesPref(Currency currencyData) {
+        ArrayList<String> avaiableCurrencies = currencyData.getCurrencies();
+        HashSet<String> favoriteCurrencies = currencyData.getFavoriteCurrencies();
+
         mPrefCurrencies = (MultiSelectListPreference) findPreference(PREF_KEY_CURRENCIES);
 
-        CharSequence[] entries = new CharSequence[currenciesArray.size()];
-        CharSequence[] entryValues = new CharSequence[currenciesArray.size()];
-        for (int i = 0; i < currenciesArray.size(); i++) {
-            entries[i] = currenciesArray.get(i);
-            entryValues[i] = currenciesArray.get(i);
+        CharSequence[] entries = new CharSequence[avaiableCurrencies.size()];
+        CharSequence[] entryValues = new CharSequence[avaiableCurrencies.size()];
+        for (int i = 0; i < avaiableCurrencies.size(); i++) {
+            entries[i] = avaiableCurrencies.get(i);
+            entryValues[i] = avaiableCurrencies.get(i);
         }
 
+        mPrefCurrencies.setDefaultValue(entryValues);
         mPrefCurrencies.setEntries(entries);
         mPrefCurrencies.setEntryValues(entryValues);
+
+        Set<String> currentlyAddedCurrencies = mPrefCurrencies.getValues();
+        if (currentlyAddedCurrencies != null) {
+            for (String key : currentlyAddedCurrencies) {
+                if (favoriteCurrencies != null && !favoriteCurrencies.contains(key)) {
+                    favoriteCurrencies.add(key);
+                }
+            }
+        }
+        mPrefCurrencies.setValues(favoriteCurrencies);
     }
 }

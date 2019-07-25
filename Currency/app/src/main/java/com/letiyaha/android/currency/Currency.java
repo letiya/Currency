@@ -5,6 +5,7 @@ import android.os.Parcelable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 
 /**
  * Created by Belle Lee on 7/18/2019.
@@ -17,6 +18,7 @@ public class Currency implements Parcelable{
     private String mDate;
     private HashMap<String, String> mRates;
     private ArrayList<String> mCurrencies;
+    private HashSet<String> mFavoriteCurrencies;
 
     public Currency() {
 
@@ -38,7 +40,9 @@ public class Currency implements Parcelable{
         mRates = rates;
     }
 
-    public void setCurrencies(ArrayList<String> currencies) {mCurrencies = currencies;}
+    public void setCurrencies(ArrayList<String> currencies) { mCurrencies = currencies;}
+
+    public void setFavoriteCurrencies(HashSet<String> favoriteCurrencies) { mFavoriteCurrencies = favoriteCurrencies;}
 
     public String getTimestamp() {
         return mTimestamp;
@@ -56,7 +60,9 @@ public class Currency implements Parcelable{
         return mRates;
     }
 
-    public ArrayList<String> getCurrencies() {return mCurrencies; }
+    public ArrayList<String> getCurrencies() { return mCurrencies; }
+
+    public HashSet<String> getFavoriteCurrencies() { return mFavoriteCurrencies; }
 
     // Parcelling part
     protected Currency(Parcel in) {
@@ -65,6 +71,7 @@ public class Currency implements Parcelable{
         mDate = in.readString();
         mRates = (HashMap<String, String>) in.readSerializable();
         mCurrencies = (ArrayList<String>) in.readSerializable();
+        mFavoriteCurrencies = (HashSet<String>) in.readSerializable();
     }
 
     @Override
@@ -74,6 +81,7 @@ public class Currency implements Parcelable{
         dest.writeString(mDate);
         dest.writeSerializable(mRates);
         dest.writeSerializable(mCurrencies);
+        dest.writeSerializable(mFavoriteCurrencies);
     }
 
     @Override

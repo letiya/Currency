@@ -40,7 +40,7 @@ public class MainActivity extends AppCompatActivity implements CurrencyAdapter.L
 
         mCurrencyList.setHasFixedSize(true);
 
-        mCurrencyAdapter = new CurrencyAdapter(this);
+        mCurrencyAdapter = new CurrencyAdapter(this, this);
         mCurrencyList.setAdapter(mCurrencyAdapter);
 
         if (isOnline()) {
@@ -107,4 +107,5 @@ public class MainActivity extends AppCompatActivity implements CurrencyAdapter.L
         }
         return super.onOptionsItemSelected(item);
     }
+
 }

@@ -1,5 +1,7 @@
 package com.letiyaha.android.currency;
 
+import android.arch.lifecycle.Observer;
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
@@ -15,16 +17,15 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.letiyaha.android.currency.utilities.CurrencyFetcher;
+import com.letiyaha.android.currency.utilities.CurrencyJsonViewModel;
 
-public class MainActivity extends AppCompatActivity implements CurrencyAdapter.ListItemClickListener, CurrencyFetcher.FetchResultDisplay {
+public class MainActivity extends AppCompatActivity implements CurrencyAdapter.ListItemClickListener {
 
     private RecyclerView mCurrencyList;
     private TextView mErrorMessageDisplay;
 
     private CurrencyAdapter mCurrencyAdapter;
 
-    private static final int CURRENCY_LOADER_ID = 0;
     private static final String CURRENCY_DATA = "CURRENCY_DATA";
 
     @Override
@@ -44,11 +45,25 @@ public class MainActivity extends AppCompatActivity implements CurrencyAdapter.L
         mCurrencyList.setAdapter(mCurrencyAdapter);
 
         if (isOnline()) {
-            CurrencyFetcher currencyFetcher = new CurrencyFetcher(this, mCurrencyAdapter, this);
-            getSupportLoaderManager().initLoader(CURRENCY_LOADER_ID, null, currencyFetcher);
+            setupViewModel();
         } else {
-            showErrorMsg();
+            showErrorMsg("Check internet connection!");
         }
+    }
+
+    private void setupViewModel() {
+        CurrencyJsonViewModel viewModel = ViewModelProviders.of(this).get(CurrencyJsonViewModel.class);
+        viewModel.getData().observe(this, new Observer<Currency>() {
+            @Override
+            public void onChanged(Currency currencyData) {
+                if (currencyData == null) {
+                    showErrorMsg("No reply from the currency source database!");
+                } else {
+                    mCurrencyAdapter.setCurrencyData(currencyData);
+                    showFetchResult();
+                }
+            }
+        });
     }
 
     @Override
@@ -65,15 +80,14 @@ public class MainActivity extends AppCompatActivity implements CurrencyAdapter.L
         return networkInfo != null && networkInfo.isConnectedOrConnecting();
     }
 
-    @Override
-    public void showErrorMsg() {
+    public void showErrorMsg(String errorMsg) {
         /* First, hide the currently visible data */
         mCurrencyList.setVisibility(View.INVISIBLE);
         /* Then, show the error */
+        mErrorMessageDisplay.setText(errorMsg);
         mErrorMessageDisplay.setVisibility(View.VISIBLE);
     }
 
-    @Override
     public void showFetchResult() {
         mCurrencyList.setVisibility(View.VISIBLE);
         mErrorMessageDisplay.setVisibility(View.INVISIBLE);

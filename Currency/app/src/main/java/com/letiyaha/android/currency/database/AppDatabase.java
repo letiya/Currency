@@ -20,12 +20,13 @@ public abstract class AppDatabase extends RoomDatabase {
     private static final String DATABASE_NAME = "currencyconverter";
     private static AppDatabase sInstance;
 
-    public static AppDatabase getsInstance(Context context) {
+    public static AppDatabase getInstance(Context context) {
         if (sInstance == null) {
             synchronized (LOCK) {
                 Log.d(LOG_TAG, "Creating a new database instance");
                 sInstance = Room.databaseBuilder(context.getApplicationContext(),
                         AppDatabase.class, AppDatabase.DATABASE_NAME)
+                        .allowMainThreadQueries() // TODO Test only, remove later!
                         .build();
             }
         }

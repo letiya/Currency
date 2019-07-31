@@ -1,17 +1,18 @@
 package com.letiyaha.android.currency;
 
 import android.content.Context;
-import android.content.SharedPreferences;
-import android.support.v7.preference.PreferenceManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.letiyaha.android.currency.database.AppDatabase;
+import com.letiyaha.android.currency.database.CurrencyEntry;
+import com.letiyaha.android.currency.utilities.Util;
+
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 
 /**
  * Created by Belle Lee on 7/15/2019.
@@ -19,47 +20,37 @@ import java.util.Set;
 
 public class CurrencyAdapter extends RecyclerView.Adapter<CurrencyAdapter.CurrencyViewHolder> {
 
-    private static final String PREF_KEY_CURRENCIES = "key_currencies";
     private final ListItemClickListener mOnClickListener;
 
-    private Currency mCurrencyData;
+    private Context mContext;
 
     private ArrayList<String> mAddedCurrencies;
+    private ArrayList<String> mAddedCurrencyRates;
+
+    private AppDatabase mDb;
 
     public interface ListItemClickListener {
         void onListItemClick(int clickedItemIndex);
     }
 
-    private Context mContext;
-
     public CurrencyAdapter(ListItemClickListener listener, Context context) {
         mOnClickListener = listener;
         mContext = context;
+        mDb = AppDatabase.getInstance(mContext);
     }
 
-    public void setCurrencyData(Currency currencyData) {
-        mCurrencyData = currencyData;
+    public void setFavoriteCurrencies() {
+        List<CurrencyEntry> currencyEntries = mDb.currencyDao().loadFavoriteCurrencies(Util.getToday());
 
-        ArrayList<String> addedCurrencies = new ArrayList<String>();
-        addedCurrencies.add(mCurrencyData.getBaseCurrency());
-
-        ArrayList<String> preference = getSharedPreferences();
-        if (preference != null) {
-            preference.remove(mCurrencyData.getBaseCurrency());
-            addedCurrencies.addAll(preference);
+        mAddedCurrencies = new ArrayList<>();
+        mAddedCurrencyRates = new ArrayList<>();
+        for (int i = 0; i < currencyEntries.size(); i++) {
+            CurrencyEntry currencyEntry = currencyEntries.get(i);
+            mAddedCurrencies.add(currencyEntry.getCurrency());
+            mAddedCurrencyRates.add(currencyEntry.getRate());
         }
 
-        setFavoriteCurrencies(addedCurrencies);
-        mCurrencyData.setFavoriteCurrencies(new HashSet<String>(addedCurrencies));
-    }
-
-    public void setFavoriteCurrencies(ArrayList<String> addedCurrencies) {
-        mAddedCurrencies = addedCurrencies;
         notifyDataSetChanged();
-    }
-
-    public Currency getCurrencyData() {
-        return mCurrencyData;
     }
 
     @Override
@@ -76,18 +67,19 @@ public class CurrencyAdapter extends RecyclerView.Adapter<CurrencyAdapter.Curren
 
     @Override
     public void onBindViewHolder(CurrencyViewHolder holder, int position) {
-        if (mCurrencyData == null) {
+        if (mAddedCurrencies == null || mAddedCurrencies.size() == 0) {
             return;
         }
 
         String majorCurrency = mAddedCurrencies.get(position);
         String majCurrVal;
+
         if (position == 0) {
-            majorCurrency = mCurrencyData.getBaseCurrency();
-            majCurrVal = mCurrencyData.getRates().get(majorCurrency);
+            majCurrVal = mAddedCurrencyRates.get(position);
         } else {
-            String minorCurrency = mCurrencyData.getBaseCurrency();
-            majCurrVal = mCurrencyData.getRates().get(majorCurrency);
+            String minorCurrency = mAddedCurrencies.get(0);
+            majCurrVal = mAddedCurrencyRates.get(position);
+
             float exchange = 1 / Float.parseFloat(majCurrVal);
             holder.mTvMinCurrencyVal.setText("1 " + majorCurrency + " = " + exchange + " " + minorCurrency);
         }
@@ -127,16 +119,4 @@ public class CurrencyAdapter extends RecyclerView.Adapter<CurrencyAdapter.Curren
         }
     }
 
-    private ArrayList<String> getSharedPreferences() {
-        ArrayList<String> addedCurrencies = null;
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
-        Set<String> currentlyAddedCurrencies = sharedPreferences.getStringSet(PREF_KEY_CURRENCIES, null);
-        if (currentlyAddedCurrencies != null) {
-            addedCurrencies = new ArrayList<String>();
-            for (String currency : currentlyAddedCurrencies) {
-                addedCurrencies.add(currency);
-            }
-        }
-        return addedCurrencies;
-    }
 }

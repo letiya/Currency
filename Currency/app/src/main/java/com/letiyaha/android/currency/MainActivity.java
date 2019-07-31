@@ -17,16 +17,23 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.letiyaha.android.currency.database.AppDatabase;
+import com.letiyaha.android.currency.database.CurrencyEntry;
 import com.letiyaha.android.currency.utilities.CurrencyJsonViewModel;
+import com.letiyaha.android.currency.utilities.Util;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements CurrencyAdapter.ListItemClickListener {
 
     private RecyclerView mCurrencyList;
     private TextView mErrorMessageDisplay;
-
     private CurrencyAdapter mCurrencyAdapter;
-
-    private static final String CURRENCY_DATA = "CURRENCY_DATA";
+    private AppDatabase mDb;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,11 +51,23 @@ public class MainActivity extends AppCompatActivity implements CurrencyAdapter.L
         mCurrencyAdapter = new CurrencyAdapter(this, this);
         mCurrencyList.setAdapter(mCurrencyAdapter);
 
+        mDb = AppDatabase.getInstance(getApplicationContext());
+
         if (isOnline()) {
-            setupViewModel();
+            if (!hasDataInDb()) {
+                setupViewModel(); // Fetch data from the network.
+            }
         } else {
             showErrorMsg("Check internet connection!");
         }
+    }
+
+    private boolean hasDataInDb() {
+        List<CurrencyEntry> currencyEntries = mDb.currencyDao().loadCurrenciesByDate(Util.getToday());
+        if (currencyEntries != null && currencyEntries.size() > 0) {
+            return true;
+        }
+        return false;
     }
 
     private void setupViewModel() {
@@ -59,11 +78,30 @@ public class MainActivity extends AppCompatActivity implements CurrencyAdapter.L
                 if (currencyData == null) {
                     showErrorMsg("No reply from the currency source database!");
                 } else {
-                    mCurrencyAdapter.setCurrencyData(currencyData);
+                    updateLocalDatabase(currencyData);
+                    mCurrencyAdapter.setFavoriteCurrencies();
                     showFetchResult();
                 }
             }
         });
+    }
+
+    private void updateLocalDatabase(Currency currencyData) {
+        HashMap<String, String> rates = currencyData.getRates();
+        for (String currency : rates.keySet()) {
+            String rate = rates.get(currency);
+            boolean isBase = Double.parseDouble(rate) == 1;
+
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            Date date = null;
+            try {
+                date = sdf.parse(currencyData.getDate());
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+            CurrencyEntry currencyEntry = new CurrencyEntry(date, currencyData.getTimestamp(), currency, String.valueOf(isBase), rate, String.valueOf(isBase));
+            mDb.currencyDao().insertCurrency(currencyEntry);
+        }
     }
 
     @Override
@@ -80,7 +118,7 @@ public class MainActivity extends AppCompatActivity implements CurrencyAdapter.L
         return networkInfo != null && networkInfo.isConnectedOrConnecting();
     }
 
-    public void showErrorMsg(String errorMsg) {
+    private void showErrorMsg(String errorMsg) {
         /* First, hide the currently visible data */
         mCurrencyList.setVisibility(View.INVISIBLE);
         /* Then, show the error */
@@ -88,7 +126,7 @@ public class MainActivity extends AppCompatActivity implements CurrencyAdapter.L
         mErrorMessageDisplay.setVisibility(View.VISIBLE);
     }
 
-    public void showFetchResult() {
+    private void showFetchResult() {
         mCurrencyList.setVisibility(View.VISIBLE);
         mErrorMessageDisplay.setVisibility(View.INVISIBLE);
     }
@@ -105,21 +143,33 @@ public class MainActivity extends AppCompatActivity implements CurrencyAdapter.L
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (mCurrencyAdapter.getCurrencyData() == null){
+        if (!hasDataInDb()) {
             Toast.makeText(this, "Unable to add currency now. \nPlease check internet connection!", Toast.LENGTH_LONG).show();
             return super.onOptionsItemSelected(item);
         }
-
         int id = item.getItemId();
         if (id == R.id.action_settings) {
             Context context = this;
             Class destinationClass = SettingsActivity.class;
             Intent intent2StartSettomgsActivity = new Intent(context, destinationClass);
-            intent2StartSettomgsActivity.putExtra(CURRENCY_DATA, mCurrencyAdapter.getCurrencyData());
             startActivity(intent2StartSettomgsActivity);
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        if (isOnline()) {
+            if (!hasDataInDb()) {
+                setupViewModel(); // Fetch data from the network.
+            } else {
+                mCurrencyAdapter.setFavoriteCurrencies(); // Refresh
+            }
+        } else {
+            showErrorMsg("Check internet connection!");
+        }
     }
 
 }

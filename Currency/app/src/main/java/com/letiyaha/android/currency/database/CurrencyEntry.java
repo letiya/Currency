@@ -14,29 +14,32 @@ import java.util.Date;
 public class CurrencyEntry {
 
     @PrimaryKey(autoGenerate = true)
-    private int id; // TODO Or use timestamp
+    private int id;
     private Date date;
     private String timestamp;
     private String currency;
     private String isBase;
     private String rate;
+    private String isFavorite;
 
     @Ignore
-    public CurrencyEntry(Date date, String timestamp, String currency, String isBase, String rate) {
+    public CurrencyEntry(Date date, String timestamp, String currency, String isBase, String rate, String isFavorite) {
         this.date = date;
         this.timestamp = timestamp;
         this.currency = currency;
         this.isBase = isBase;
         this.rate = rate;
+        this.isFavorite = isFavorite;
     }
 
-    public CurrencyEntry(int id, Date date, String timestamp, String currency, String isBase, String rate) {
+    public CurrencyEntry(int id, Date date, String timestamp, String currency, String isBase, String rate, String isFavorite) {
         this.id = id;
         this.date = date;
         this.timestamp = timestamp;
         this.currency = currency;
         this.isBase = isBase;
         this.rate = rate;
+        this.isFavorite = isFavorite;
     }
 
     public int getId() {
@@ -74,6 +77,12 @@ public class CurrencyEntry {
     }
     public void setRate(String rate) {
         this.rate = rate;
+    }
+    public String getIsFavorite() {
+        return isFavorite;
+    }
+    public void setIsFavorite(String isFavorite) {
+        this.isFavorite = isFavorite;
     }
 
 }

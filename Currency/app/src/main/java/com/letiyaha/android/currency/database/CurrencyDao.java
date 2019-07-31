@@ -17,8 +17,8 @@ import java.util.List;
 @Dao
 public interface CurrencyDao {
 
-    @Query("SELECT * FROM currency where date = :date")
-    List<CurrencyEntry> loadAllCurrenciesByDate(Date date);
+    @Query("SELECT * FROM currency WHERE date = :date ORDER BY currency")
+    List<CurrencyEntry> loadCurrenciesByDate(Date date);
 
     @Insert
     void insertCurrency(CurrencyEntry currencyEntry);
@@ -28,4 +28,20 @@ public interface CurrencyDao {
 
     @Delete
     void deleteCurrency(CurrencyEntry currencyEntry);
+
+    @Query("SELECT currency FROM currency WHERE date = :date AND isBase = 'true'")
+    String loadBaseCurrency(Date date);
+
+    @Query("SELECT rate FROM currency WHERE date = :date AND currency = :currency")
+    String loadCurrencyRate(Date date, String currency);
+
+    @Query("SELECT * FROM currency WHERE date = :date AND isFavorite = 'true' ORDER BY isBase desc")
+    List<CurrencyEntry> loadFavoriteCurrencies(Date date);
+
+    @Query("UPDATE currency SET isFavorite = :isFavorite WHERE currency = :currency")
+    void updateFavoriteCurrency(String isFavorite, String currency);
+
+    @Query("UPDATE currency SET isFavorite = 'false'")
+    void resetFavoriteSetting();
+
 }

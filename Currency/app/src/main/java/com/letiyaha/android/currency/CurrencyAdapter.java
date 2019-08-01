@@ -30,7 +30,7 @@ public class CurrencyAdapter extends RecyclerView.Adapter<CurrencyAdapter.Curren
     private AppDatabase mDb;
 
     public interface ListItemClickListener {
-        void onListItemClick(int clickedItemIndex);
+        void onListItemClick(String clickedCurrency);
     }
 
     public CurrencyAdapter(ListItemClickListener listener, Context context) {
@@ -115,7 +115,8 @@ public class CurrencyAdapter extends RecyclerView.Adapter<CurrencyAdapter.Curren
         @Override
         public void onClick(View view) {
             int clickedPosition = getAdapterPosition();
-            mOnClickListener.onListItemClick(clickedPosition);
+            String clickedCurrency = mAddedCurrencies.get(clickedPosition);
+            mOnClickListener.onListItemClick(clickedCurrency);
         }
     }
 

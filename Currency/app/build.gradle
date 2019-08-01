@@ -35,4 +35,6 @@ dependencies {
     // Add ViewModel and LiveData dependencies
     implementation "android.arch.lifecycle:extensions:1.1.0"
     annotationProcessor "android.arch.lifecycle:compiler:1.1.0"
+    // MPAndroid Chart
+    compile 'com.github.PhilJay:MPAndroidChart:v3.0.3'
 }

@@ -44,4 +44,10 @@ public interface CurrencyDao {
     @Query("UPDATE currency SET isFavorite = 'false'")
     void resetFavoriteSetting();
 
+    @Query("SELECT rate FROM currency WHERE currency = :currency AND date > :date ORDER BY date desc")
+    List<String> loadRatesAfter(String currency, Date date);
+
+    @Query("SELECT * FROM currency WHERE currency = :currency AND date > :date ORDER BY date")
+    List<CurrencyEntry> loadAllAfter(String currency, Date date);
+
 }

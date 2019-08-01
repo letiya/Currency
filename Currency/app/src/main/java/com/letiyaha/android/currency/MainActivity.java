@@ -35,6 +35,8 @@ public class MainActivity extends AppCompatActivity implements CurrencyAdapter.L
     private CurrencyAdapter mCurrencyAdapter;
     private AppDatabase mDb;
 
+    private static final String CLICKED_CURRENCY = "clickedCurrency";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -105,10 +107,11 @@ public class MainActivity extends AppCompatActivity implements CurrencyAdapter.L
     }
 
     @Override
-    public void onListItemClick(int clickedItemIndex) {
+    public void onListItemClick(String clickedCurrency) {
         Context context = this;
         Class destinationClass = DetailActivity.class;
         Intent intent2StartDetailActivity = new Intent(context, destinationClass);
+        intent2StartDetailActivity.putExtra(CLICKED_CURRENCY, clickedCurrency);
         startActivity(intent2StartDetailActivity);
     }
 

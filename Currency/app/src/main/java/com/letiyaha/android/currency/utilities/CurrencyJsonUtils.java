@@ -59,4 +59,42 @@ public class CurrencyJsonUtils {
         }
         return currency;
     }
+
+    public static Currency parseHistoryCurrencyJson(String json) {
+        if (json == null) {
+            return null;
+        }
+        Currency currency = new Currency();
+        try {
+            JSONObject jsonObject = new JSONObject(json);
+            String success = jsonObject.getString(JSON_SUCCESS);
+            if (success.equalsIgnoreCase("false")) {
+                return null;
+            }
+            String timestamp = jsonObject.getString(JSON_TIMESTAMP);
+            String base = jsonObject.getString(JSON_BASE);
+            String date = jsonObject.getString(JSON_DATE);
+
+            HashMap<String, String> ratesHashMap = new HashMap<String, String>();
+            ArrayList<String> currenciesArray = new ArrayList<String>();
+
+            JSONObject rates = jsonObject.getJSONObject(JSON_RATES);
+            Iterator<String> keys = rates.keys();
+            while (keys.hasNext()) {
+                String key = keys.next();
+                currenciesArray.add(key);
+                ratesHashMap.put(key, rates.getString(key));
+            }
+            Collections.sort(currenciesArray);
+
+            currency.setTimestamp(timestamp);
+            currency.setBaseCurrency(base);
+            currency.setDate(date);
+            currency.setRates(ratesHashMap);
+            currency.setCurrencies(currenciesArray);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return currency;
+    }
 }

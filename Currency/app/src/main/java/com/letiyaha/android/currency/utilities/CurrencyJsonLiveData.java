@@ -6,6 +6,7 @@ import android.os.AsyncTask;
 import com.letiyaha.android.currency.Currency;
 
 import java.net.URL;
+import java.util.Date;
 
 /**
  * Created by Belle Lee on 7/27/2019.
@@ -13,19 +14,19 @@ import java.net.URL;
 
 public class CurrencyJsonLiveData extends LiveData<Currency> {
 
-    public CurrencyJsonLiveData() {
-        loadData();
+    public CurrencyJsonLiveData(Date date) {
+        loadData(date);
     }
 
-    private void loadData() {
+    private void loadData(final Date date) {
         new AsyncTask<Void, Void, Currency>() {
 
             @Override
             protected Currency doInBackground(Void... voids) {
-                URL currencyRequestUrl = NetworkUtils.buildLatestUrl();
+                URL currencyRequestUrl = NetworkUtils.buildHistoricalUrl(date);
                 String jsonCurrencyResponse = NetworkUtils.getResponseFromHttpUrl(currencyRequestUrl);
-                Currency latestCurrency = CurrencyJsonUtils.parseCurrencyJson(jsonCurrencyResponse);
-                return latestCurrency;
+                Currency currencyOnDate = CurrencyJsonUtils.parseHistoryCurrencyJson(jsonCurrencyResponse);
+                return currencyOnDate;
             }
 
             @Override

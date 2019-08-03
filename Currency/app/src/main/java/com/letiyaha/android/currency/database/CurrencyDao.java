@@ -50,4 +50,6 @@ public interface CurrencyDao {
     @Query("SELECT * FROM currency WHERE currency = :currency AND date > :date ORDER BY date")
     List<CurrencyEntry> loadAllAfter(String currency, Date date);
 
+    @Query("SELECT DISTINCT date FROM currency WHERE date > :date ORDER BY date desc")
+    List<Date> loadDataAfter(Date date);
 }

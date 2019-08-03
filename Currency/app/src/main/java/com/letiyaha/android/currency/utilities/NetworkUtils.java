@@ -8,6 +8,8 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Scanner;
 
 /**
@@ -27,16 +29,35 @@ public class NetworkUtils {
                 .appendPath(URL_LATEST)
                 .appendQueryParameter(API_KEY_PARAM, CurrencyAPI.API_KEY)
                 .build();
-        if (uri == null) {
-            return null;
-        }
         URL url = null;
+        if (uri != null) {
+            try {
+                url = new URL(uri.toString());
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+                Log.e(TAG, "Invalid uri: " + uri);
+            }
+        }
+        return url;
+    }
 
-        try {
-            url = new URL(uri.toString());
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-            Log.e(TAG, "Invalid uri: " + uri);
+    public static URL buildHistoricalUrl(Date date) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        String dateString = sdf.format(date);
+        Uri uri = Uri.parse(CURRENCY_BASE_URL)
+                .buildUpon()
+                .appendPath(dateString)
+                .appendQueryParameter(API_KEY_PARAM, CurrencyAPI.API_KEY)
+                .build();
+
+        URL url = null;
+        if (uri != null) {
+            try {
+                url = new URL(uri.toString());
+            } catch (MalformedURLException e) {
+                e.printStackTrace();
+                Log.e(TAG, "Invalid uri: " + uri);
+            }
         }
         return url;
     }

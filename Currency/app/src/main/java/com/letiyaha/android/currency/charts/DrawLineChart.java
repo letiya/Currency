@@ -49,10 +49,10 @@ public class DrawLineChart {
         xAxis.setGranularity(1f);
 
         leftYAxis = mLineChart.getAxisLeft();
-        leftYAxis.setAxisMinimum(0f); // Set left Y axis starts from 0
+//        leftYAxis.setAxisMinimum(0f); // Set left Y axis starts from 0
 
         rightYAxis = mLineChart.getAxisRight();
-        rightYAxis.setAxisMinimum(0f); // Set right Y axis starts from 0
+//        rightYAxis.setAxisMinimum(0f); // Set right Y axis starts from 0
         rightYAxis.setEnabled(false);
 
         // Set up legend

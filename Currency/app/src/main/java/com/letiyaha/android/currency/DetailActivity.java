@@ -38,14 +38,14 @@ public class DetailActivity extends AppCompatActivity {
         Intent intentThatStartedThisActivity = getIntent();
         String clickedCurrency = intentThatStartedThisActivity.getStringExtra(CLICKED_CURRENCY);
 
-        List<String> xAxisValues = new ArrayList<>(); // 20180101
+        List<String> xAxisValues = new ArrayList<>();
         List<Float> dateValueList = new ArrayList<>();
 
-        List<CurrencyEntry> data = mDb.currencyDao().loadAllAfter(clickedCurrency, Util.getNDaysAgo(30));
+        List<CurrencyEntry> data = mDb.currencyDao().loadAllAfter(clickedCurrency, Util.getNDaysAgo(Util.NUM_OF_HISTORY_DATA));
         for (int i = 0; i < data.size(); i++) {
             CurrencyEntry currencyEntry = data.get(i);
             Date date = currencyEntry.getDate();
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+            SimpleDateFormat sdf = new SimpleDateFormat("MMdd");
             String dateString = sdf.format(date);
             String rate = currencyEntry.getRate();
 

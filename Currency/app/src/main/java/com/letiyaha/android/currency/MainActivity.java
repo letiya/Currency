@@ -39,7 +39,6 @@ public class MainActivity extends AppCompatActivity implements CurrencyAdapter.L
     private AppDatabase mDb;
 
     private static final String CLICKED_CURRENCY = "clickedCurrency";
-    private static final int NUM_OF_HISTORY_DATA = 5;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -121,8 +120,12 @@ public class MainActivity extends AppCompatActivity implements CurrencyAdapter.L
     protected void onResume() {
         super.onResume();
         if (isOnline()) {
-            List<Date> dates = getDbMissingHistoryDates(NUM_OF_HISTORY_DATA);
+            List<Date> dates = getDbMissingHistoryDates(Util.NUM_OF_HISTORY_DATA);
             setupViewModel(dates);
+            if (Util.hasDataInDb(mContext, Util.getToday())) {
+                mCurrencyAdapter.setFavoriteCurrencies(); // Refresh
+                showFetchResult();
+            }
         } else {
             showErrorMsg("Check internet connection!");
         }
@@ -148,22 +151,22 @@ public class MainActivity extends AppCompatActivity implements CurrencyAdapter.L
         CurrencyJsonViewModel viewModel = ViewModelProviders.of(this, new CurrencyJsonViewModelFactory(mContext, dates)).get(CurrencyJsonViewModel.class);
         for (int i = 0; i < dates.size(); i++) {
             final Date date = dates.get(i);
-            viewModel.getData(date).observe(this, new Observer<Currency>() {
-                @Override
-                public void onChanged(Currency currencyData) {
-                    if (currencyData == null) {
-                        showErrorMsg("No reply from the currency source database!");
-                    } else {
-                        if (!Util.hasDataInDb(mContext, date)) {
+            if (!Util.hasDataInDb(mContext, date)) {
+                viewModel.getData(date).observe(this, new Observer<Currency>() {
+                    @Override
+                    public void onChanged(Currency currencyData) {
+                        if (currencyData == null) {
+                            showErrorMsg("No reply from the currency source database!");
+                        } else {
                             updateLocalDatabase(currencyData);
-                        }
-                        if (date.compareTo(Util.getToday()) == 0) {
-                            mCurrencyAdapter.setFavoriteCurrencies(); // Refresh
-                            showFetchResult();
+                            if (date.compareTo(Util.getToday()) == 0) {
+                                mCurrencyAdapter.setFavoriteCurrencies(); // Refresh
+                                showFetchResult();
+                            }
                         }
                     }
-                }
-            });
+                });
+            }
         }
     }
 

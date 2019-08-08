@@ -15,6 +15,8 @@ import java.util.List;
 
 public class Util {
 
+    public static final int NUM_OF_HISTORY_DATA = 30;
+
     public static Date getToday() {
         Calendar cal = Calendar.getInstance();
         cal.set(Calendar.HOUR_OF_DAY, 0);

@@ -1,5 +1,6 @@
 package com.letiyaha.android.currency;
 
+import android.app.Activity;
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -9,6 +10,7 @@ import android.widget.TextView;
 
 import com.letiyaha.android.currency.database.AppDatabase;
 import com.letiyaha.android.currency.database.CurrencyEntry;
+import com.letiyaha.android.currency.utilities.AppExecutors;
 import com.letiyaha.android.currency.utilities.Util;
 
 import java.util.ArrayList;
@@ -28,29 +30,40 @@ public class CurrencyAdapter extends RecyclerView.Adapter<CurrencyAdapter.Curren
     private ArrayList<String> mAddedCurrencyRates;
 
     private AppDatabase mDb;
+    private Activity mActivity;
 
     public interface ListItemClickListener {
         void onListItemClick(String clickedCurrency);
     }
 
-    public CurrencyAdapter(ListItemClickListener listener, Context context) {
+    public CurrencyAdapter(ListItemClickListener listener, Context context, Activity activity) {
         mOnClickListener = listener;
         mContext = context;
         mDb = AppDatabase.getInstance(mContext);
+        mActivity = activity;
     }
 
     public void setFavoriteCurrencies() {
-        List<CurrencyEntry> currencyEntries = mDb.currencyDao().loadFavoriteCurrencies(Util.getToday());
+        AppExecutors.getInstance().DiskIO().execute(new Runnable() {
+            @Override
+            public void run() {
+                List<CurrencyEntry> currencyEntries = mDb.currencyDao().loadFavoriteCurrencies(Util.getToday());
+                mAddedCurrencies = new ArrayList<>();
+                mAddedCurrencyRates = new ArrayList<>();
+                for (int i = 0; i < currencyEntries.size(); i++) {
+                    CurrencyEntry currencyEntry = currencyEntries.get(i);
+                    mAddedCurrencies.add(currencyEntry.getCurrency());
+                    mAddedCurrencyRates.add(currencyEntry.getRate());
+                }
 
-        mAddedCurrencies = new ArrayList<>();
-        mAddedCurrencyRates = new ArrayList<>();
-        for (int i = 0; i < currencyEntries.size(); i++) {
-            CurrencyEntry currencyEntry = currencyEntries.get(i);
-            mAddedCurrencies.add(currencyEntry.getCurrency());
-            mAddedCurrencyRates.add(currencyEntry.getRate());
-        }
-
-        notifyDataSetChanged();
+                mActivity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        notifyDataSetChanged();
+                    }
+                });
+            }
+        });
     }
 
     @Override

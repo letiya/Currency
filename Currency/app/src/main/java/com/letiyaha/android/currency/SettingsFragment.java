@@ -9,6 +9,7 @@ import android.support.v7.preference.PreferenceFragmentCompat;
 
 import com.letiyaha.android.currency.database.AppDatabase;
 import com.letiyaha.android.currency.database.CurrencyEntry;
+import com.letiyaha.android.currency.utilities.AppExecutors;
 import com.letiyaha.android.currency.utilities.Util;
 
 import java.util.ArrayList;
@@ -40,33 +41,45 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Shared
     public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
         addPreferencesFromResource(R.xml.pref_settings);
 
-        ArrayList<String> avaiableCurrencies = getDbCurrencies();
-        HashSet<String> favoriteCurrencies = getDbFavoriteCurrencies();
-        setupCurrenciesPref(avaiableCurrencies, favoriteCurrencies);
+        getDbCurrencies();
+
     }
 
-    private ArrayList<String> getDbCurrencies() {
-        List<CurrencyEntry> currencyEntries = mDb.currencyDao().loadCurrenciesByDate(Util.getToday());
-        ArrayList<String> avaiableCurrencies = new ArrayList<>();
-        for (int i = 0; i < currencyEntries.size(); i++) {
-            CurrencyEntry currencyEntry = currencyEntries.get(i);
-            avaiableCurrencies.add(currencyEntry.getCurrency());
-        }
-        return avaiableCurrencies;
+    private ArrayList<String> avaiableCurrencies;
+
+    private void getDbCurrencies() {
+        AppExecutors.getInstance().DiskIO().execute(new Runnable() {
+            @Override
+            public void run() {
+                List<CurrencyEntry> currencyEntries = mDb.currencyDao().loadCurrenciesByDate(Util.getToday());
+                avaiableCurrencies = new ArrayList<>();
+                for (int i = 0; i < currencyEntries.size(); i++) {
+                    CurrencyEntry currencyEntry = currencyEntries.get(i);
+                    avaiableCurrencies.add(currencyEntry.getCurrency());
+                }
+                getDbFavoriteCurrencies();
+            }
+        });
     }
 
-    private HashSet<String> getDbFavoriteCurrencies() {
-        List<CurrencyEntry> currencyEntries = mDb.currencyDao().loadFavoriteCurrencies(Util.getToday());
+    private HashSet<String> favoriteCurrencies;
 
-        HashSet<String> favoriteCurrencies = new HashSet<String>();
-        for (int i = 0; i < currencyEntries.size(); i++) {
-            CurrencyEntry currencyEntry = currencyEntries.get(i);
-            favoriteCurrencies.add(currencyEntry.getCurrency());
-        }
-        return favoriteCurrencies;
+    private void getDbFavoriteCurrencies() {
+        AppExecutors.getInstance().DiskIO().execute(new Runnable() {
+            @Override
+            public void run() {
+                List<CurrencyEntry> currencyEntries = mDb.currencyDao().loadFavoriteCurrencies(Util.getToday());
+                favoriteCurrencies = new HashSet<String>();
+                for (int i = 0; i < currencyEntries.size(); i++) {
+                    CurrencyEntry currencyEntry = currencyEntries.get(i);
+                    favoriteCurrencies.add(currencyEntry.getCurrency());
+                }
+                setupCurrenciesPref();
+            }
+        });
     }
 
-    private void setupCurrenciesPref(ArrayList<String> avaiableCurrencies, HashSet<String> favoriteCurrencies) {
+    private void setupCurrenciesPref() {
         mPrefCurrencies = (MultiSelectListPreference) findPreference(PREF_KEY_CURRENCIES);
 
         CharSequence[] entries = new CharSequence[avaiableCurrencies.size()];
@@ -86,11 +99,21 @@ public class SettingsFragment extends PreferenceFragmentCompat implements Shared
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
         Preference preference = findPreference(key);
         if (preference != null) {
-            Set<String> currentFavoriteCurrencies = sharedPreferences.getStringSet(key, null);
-            mDb.currencyDao().resetFavoriteSetting();
-            for (String currency : currentFavoriteCurrencies) {
-                mDb.currencyDao().updateFavoriteCurrency("true", currency);
-            }
+            final Set<String> currentFavoriteCurrencies = sharedPreferences.getStringSet(key, null);
+            AppExecutors.getInstance().DiskIO().execute(new Runnable() {
+                @Override
+                public void run() {
+                    mDb.currencyDao().resetFavoriteSetting();
+                    for (final String currency : currentFavoriteCurrencies) {
+                        AppExecutors.getInstance().DiskIO().execute(new Runnable() {
+                            @Override
+                            public void run() {
+                                mDb.currencyDao().updateFavoriteCurrency("true", currency);
+                            }
+                        });
+                    }
+                }
+            });
         }
     }
 

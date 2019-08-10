@@ -1,5 +1,6 @@
 package com.letiyaha.android.currency;
 
+import android.arch.lifecycle.LifecycleOwner;
 import android.arch.lifecycle.Observer;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
@@ -15,16 +16,14 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.letiyaha.android.currency.database.AppDatabase;
 import com.letiyaha.android.currency.database.CurrencyEntry;
+import com.letiyaha.android.currency.utilities.AppExecutors;
 import com.letiyaha.android.currency.utilities.CurrencyJsonViewModel;
 import com.letiyaha.android.currency.utilities.CurrencyJsonViewModelFactory;
 import com.letiyaha.android.currency.utilities.Util;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -37,6 +36,7 @@ public class MainActivity extends AppCompatActivity implements CurrencyAdapter.L
     private TextView mErrorMessageDisplay;
     private CurrencyAdapter mCurrencyAdapter;
     private AppDatabase mDb;
+    private List<Date> mDates;
 
     private static final String CLICKED_CURRENCY = "clickedCurrency";
 
@@ -54,7 +54,7 @@ public class MainActivity extends AppCompatActivity implements CurrencyAdapter.L
 
         mCurrencyList.setHasFixedSize(true);
 
-        mCurrencyAdapter = new CurrencyAdapter(this, this);
+        mCurrencyAdapter = new CurrencyAdapter(this, this, this);
         mCurrencyList.setAdapter(mCurrencyAdapter);
 
         mDb = AppDatabase.getInstance(getApplicationContext());
@@ -101,10 +101,6 @@ public class MainActivity extends AppCompatActivity implements CurrencyAdapter.L
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (!Util.hasDataInDb(mContext, Util.getToday())) {
-            Toast.makeText(this, "Unable to add currency now. \nPlease check internet connection!", Toast.LENGTH_LONG).show();
-            return super.onOptionsItemSelected(item);
-        }
         int id = item.getItemId();
         if (id == R.id.action_settings) {
             Context context = this;
@@ -120,72 +116,113 @@ public class MainActivity extends AppCompatActivity implements CurrencyAdapter.L
     protected void onResume() {
         super.onResume();
         if (isOnline()) {
-            List<Date> dates = getDbMissingHistoryDates(Util.NUM_OF_HISTORY_DATA);
-            setupViewModel(dates);
-            if (Util.hasDataInDb(mContext, Util.getToday())) {
-                mCurrencyAdapter.setFavoriteCurrencies(); // Refresh
-                showFetchResult();
-            }
+            getDbMissingHistoryDates(Util.NUM_OF_HISTORY_DATA);
+            checkDataInDb(Util.getToday());
         } else {
             showErrorMsg("Check internet connection!");
         }
     }
 
-    private List<Date> getDbMissingHistoryDates(int days) {
-        List<Date> dates = mDb.currencyDao().loadDataAfter(Util.getNDaysAgo(days));
-        HashMap<Date, Boolean> map = new HashMap<Date, Boolean>();
-        for (int i = 0; i < dates.size(); i++) {
-            map.put(dates.get(i), true);
-        }
-        dates = new ArrayList<Date>();
-        for (int i = days; i >= 0; i--) {
-            Date date = Util.getNDaysAgo(i);
-            if (!map.containsKey(date)) {
-                dates.add(date);
+    private void getDbMissingHistoryDates(final int days) {
+        AppExecutors.getInstance().DiskIO().execute(new Runnable() {
+            @Override
+            public void run() {
+                mDates = mDb.currencyDao().loadDataAfter(Util.getNDaysAgo(days));
+                HashMap<Date, Boolean> map = new HashMap<Date, Boolean>();
+                for (int i = 0; i < mDates.size(); i++) {
+                    map.put(mDates.get(i), true);
+                }
+                mDates = new ArrayList<Date>();
+                for (int i = days; i >= 0; i--) {
+                    Date date = Util.getNDaysAgo(i);
+                    if (!map.containsKey(date)) {
+                        mDates.add(date);
+                    }
+                }
+                setupViewModel();
             }
-        }
-        return dates;
+        });
     }
 
-    private void setupViewModel(List<Date> dates) {
-        CurrencyJsonViewModel viewModel = ViewModelProviders.of(this, new CurrencyJsonViewModelFactory(mContext, dates)).get(CurrencyJsonViewModel.class);
-        for (int i = 0; i < dates.size(); i++) {
-            final Date date = dates.get(i);
-            if (!Util.hasDataInDb(mContext, date)) {
-                viewModel.getData(date).observe(this, new Observer<Currency>() {
-                    @Override
-                    public void onChanged(Currency currencyData) {
-                        if (currencyData == null) {
-                            showErrorMsg("No reply from the currency source database!");
-                        } else {
-                            updateLocalDatabase(currencyData);
-                            if (date.compareTo(Util.getToday()) == 0) {
-                                mCurrencyAdapter.setFavoriteCurrencies(); // Refresh
-                                showFetchResult();
+    private void checkDataInDb(final Date date) {
+        AppExecutors.getInstance().DiskIO().execute(new Runnable() {
+            @Override
+            public void run() {
+                List<CurrencyEntry> currencyEntries = mDb.currencyDao().loadCurrenciesByDate(date);
+                if (currencyEntries != null && currencyEntries.size() > 0) { // Has data
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            mCurrencyAdapter.setFavoriteCurrencies(); // Refresh
+                            runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    showFetchResult();
+                                }
+                            });
+                        }
+                    });
+                }
+            }
+        });
+    }
+
+    private void setupViewModel() {
+        CurrencyJsonViewModel viewModel = ViewModelProviders.of(this, new CurrencyJsonViewModelFactory(mContext, mDates)).get(CurrencyJsonViewModel.class);
+        for (int i = 0; i < mDates.size(); i++) {
+            final Date date = mDates.get(i);
+            setViewModelObservers(date, viewModel, this);
+        }
+    }
+
+    private void setViewModelObservers(final Date date, final CurrencyJsonViewModel viewModel, final LifecycleOwner lifecycleOwner) {
+        AppExecutors.getInstance().DiskIO().execute(new Runnable() {
+            @Override
+            public void run() {
+                List<CurrencyEntry> currencyEntries = mDb.currencyDao().loadCurrenciesByDate(date);
+                if (!(currencyEntries != null && currencyEntries.size() > 0)) { // No data
+                    viewModel.getData(date).observe(lifecycleOwner, new Observer<Currency>() {
+                        @Override
+                        public void onChanged(Currency currencyData) {
+                            if (currencyData == null) {
+                                runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        showErrorMsg("No reply from the currency source database!");
+                                    }
+                                });
+                            } else {
+                                updateLocalDatabase(currencyData, date);
                             }
                         }
-                    }
-                });
+                    });
+                }
             }
-        }
+        });
     }
 
-    private void updateLocalDatabase(Currency currencyData) {
+    private void updateLocalDatabase(Currency currencyData, final Date date) {
         HashMap<String, String> rates = currencyData.getRates();
         for (String currency : rates.keySet()) {
             String rate = rates.get(currency);
             boolean isBase = Double.parseDouble(rate) == 1;
 
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-            Date date = null;
-            try {
-                date = sdf.parse(currencyData.getDate());
-            } catch (ParseException e) {
-                e.printStackTrace();
-            }
-            CurrencyEntry currencyEntry = new CurrencyEntry(date, currencyData.getTimestamp(), currency, String.valueOf(isBase), rate, String.valueOf(isBase));
-            mDb.currencyDao().insertCurrency(currencyEntry);
+            final CurrencyEntry currencyEntry = new CurrencyEntry(date, currencyData.getTimestamp(), currency, String.valueOf(isBase), rate, String.valueOf(isBase));
+            AppExecutors.getInstance().DiskIO().execute(new Runnable() {
+                @Override
+                public void run() {
+                    mDb.currencyDao().insertCurrency(currencyEntry);
+                    if (date.compareTo(Util.getToday()) == 0) {
+                        mCurrencyAdapter.setFavoriteCurrencies(); // Refresh
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                showFetchResult();
+                            }
+                        });
+                    }
+                }
+            });
         }
     }
-
 }

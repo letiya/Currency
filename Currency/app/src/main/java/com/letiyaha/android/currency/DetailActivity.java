@@ -8,6 +8,7 @@ import com.github.mikephil.charting.charts.LineChart;
 import com.letiyaha.android.currency.charts.DrawLineChart;
 import com.letiyaha.android.currency.database.AppDatabase;
 import com.letiyaha.android.currency.database.CurrencyEntry;
+import com.letiyaha.android.currency.utilities.AppExecutors;
 import com.letiyaha.android.currency.utilities.Util;
 
 import java.text.SimpleDateFormat;
@@ -36,24 +37,30 @@ public class DetailActivity extends AppCompatActivity {
         mLineChart = (LineChart) findViewById(R.id.lc_month);
 
         Intent intentThatStartedThisActivity = getIntent();
-        String clickedCurrency = intentThatStartedThisActivity.getStringExtra(CLICKED_CURRENCY);
+        final String clickedCurrency = intentThatStartedThisActivity.getStringExtra(CLICKED_CURRENCY);
 
-        List<String> xAxisValues = new ArrayList<>();
-        List<Float> dateValueList = new ArrayList<>();
+        final List<String> xAxisValues = new ArrayList<>();
+        final List<Float> dateValueList = new ArrayList<>();
 
-        List<CurrencyEntry> data = mDb.currencyDao().loadAllAfter(clickedCurrency, Util.getNDaysAgo(Util.NUM_OF_HISTORY_DATA));
-        for (int i = 0; i < data.size(); i++) {
-            CurrencyEntry currencyEntry = data.get(i);
-            Date date = currencyEntry.getDate();
-            SimpleDateFormat sdf = new SimpleDateFormat("MMdd");
-            String dateString = sdf.format(date);
-            String rate = currencyEntry.getRate();
+        AppExecutors.getInstance().DiskIO().execute(new Runnable() {
+            @Override
+            public void run() {
+                List<CurrencyEntry> data = mDb.currencyDao().loadAllAfter(clickedCurrency, Util.getNDaysAgo(Util.NUM_OF_HISTORY_DATA));
 
-            xAxisValues.add(dateString);
-            dateValueList.add(Float.parseFloat(rate));
-        }
+                for (int i = 0; i < data.size(); i++) {
+                    CurrencyEntry currencyEntry = data.get(i);
+                    Date date = currencyEntry.getDate();
+                    SimpleDateFormat sdf = new SimpleDateFormat("MMdd");
+                    String dateString = sdf.format(date);
+                    String rate = currencyEntry.getRate();
 
-        DrawLineChart drawLineChart = new DrawLineChart(xAxisValues, mLineChart, dateValueList, clickedCurrency + " trend");
+                    xAxisValues.add(dateString);
+                    dateValueList.add(Float.parseFloat(rate));
+                }
+
+                DrawLineChart drawLineChart = new DrawLineChart(xAxisValues, mLineChart, dateValueList, clickedCurrency + " trend");
+
+            }
+        });
     }
-
 }

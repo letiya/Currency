@@ -5,6 +5,8 @@ import android.arch.lifecycle.ViewModel;
 import android.content.Context;
 
 import com.letiyaha.android.currency.Currency;
+import com.letiyaha.android.currency.database.AppDatabase;
+import com.letiyaha.android.currency.database.CurrencyEntry;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -22,10 +24,21 @@ public class CurrencyJsonViewModel extends ViewModel {
         dataList = new HashMap<Date, CurrencyJsonLiveData>();
         for (int i = 0; i < dates.size(); i++) {
             Date date = dates.get(i);
-            if (!Util.hasDataInDb(context, date)) {
-                dataList.put(date, new CurrencyJsonLiveData(date));
-            }
+            checkDataInDb(context, date);
         }
+    }
+
+    private void checkDataInDb(Context context, final Date date) {
+        final AppDatabase mDb = AppDatabase.getInstance(context);
+        AppExecutors.getInstance().DiskIO().execute(new Runnable() {
+            @Override
+            public void run() {
+                List<CurrencyEntry> currencyEntries = mDb.currencyDao().loadCurrenciesByDate(date);
+                if (!(currencyEntries != null && currencyEntries.size() > 0)) { // No data
+                    dataList.put(date, new CurrencyJsonLiveData(date));
+                }
+            }
+        });
     }
 
     public LiveData<Currency> getData(Date date) {

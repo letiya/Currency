@@ -38,7 +38,7 @@ public class AppExecutors {
     }
 
     public Executor DiskIO() {
-        return dis  kIO;
+        return diskIO;
     }
 
     public Executor NetworkIO() {

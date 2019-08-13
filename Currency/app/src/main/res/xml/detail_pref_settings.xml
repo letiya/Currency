@@ -8,4 +8,18 @@
         android:singleLine="true"
         android:title="@string/pref_monthly_inv_label" />
 
+    <EditTextPreference
+        android:defaultValue="@string/pref_history_min"
+        android:inputType="numberDecimal"
+        android:key="@string/pref_history_min_key"
+        android:singleLine="true"
+        android:title="@string/pref_history_min_label" />
+
+    <EditTextPreference
+        android:defaultValue="@string/pref_history_max"
+        android:inputType="numberDecimal"
+        android:key="@string/pref_history_max_key"
+        android:singleLine="true"
+        android:title="@string/pref_history_max_label" />
+
 </PreferenceScreen>

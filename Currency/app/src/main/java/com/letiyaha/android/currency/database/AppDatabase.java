@@ -11,7 +11,7 @@ import android.util.Log;
  * Created by Belle Lee on 7/27/2019.
  */
 
-@Database(entities = CurrencyEntry.class, version = 1, exportSchema = false)
+@Database(entities = {CurrencyEntry.class, InvestmentEntry.class}, version = 2, exportSchema = false)
 @TypeConverters(DateConverter.class)
 public abstract class AppDatabase extends RoomDatabase {
 
@@ -35,4 +35,7 @@ public abstract class AppDatabase extends RoomDatabase {
     }
 
     public abstract CurrencyDao currencyDao();
+
+    public abstract InvestmentDao investmentDao();
+
 }

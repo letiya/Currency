@@ -37,8 +37,10 @@ public class MainActivity extends AppCompatActivity implements CurrencyAdapter.L
     private CurrencyAdapter mCurrencyAdapter;
     private AppDatabase mDb;
     private List<Date> mDates;
+    private String mMainCurrency;
 
     private static final String CLICKED_CURRENCY = "clickedCurrency";
+    private static final String MAIN_CURRENCY = "mainCurrency";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,6 +68,7 @@ public class MainActivity extends AppCompatActivity implements CurrencyAdapter.L
         Context context = this;
         Class destinationClass = DetailActivity.class;
         Intent intent2StartDetailActivity = new Intent(context, destinationClass);
+        intent2StartDetailActivity.putExtra(MAIN_CURRENCY, mMainCurrency);
         intent2StartDetailActivity.putExtra(CLICKED_CURRENCY, clickedCurrency);
         startActivity(intent2StartDetailActivity);
     }
@@ -150,6 +153,7 @@ public class MainActivity extends AppCompatActivity implements CurrencyAdapter.L
             public void run() {
                 List<CurrencyEntry> currencyEntries = mDb.currencyDao().loadCurrenciesByDate(date);
                 if (currencyEntries != null && currencyEntries.size() > 0) { // Has data
+                    mMainCurrency = getMainCurrency(currencyEntries);
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -165,6 +169,15 @@ public class MainActivity extends AppCompatActivity implements CurrencyAdapter.L
                 }
             }
         });
+    }
+
+    private String getMainCurrency(List<CurrencyEntry> currencyEntries) {
+        for (CurrencyEntry currencyEntry : currencyEntries) {
+            if (Boolean.valueOf(currencyEntry.getIsBase())) {
+                return currencyEntry.getCurrency();
+            }
+        }
+        return "";
     }
 
     private void setupViewModel() {

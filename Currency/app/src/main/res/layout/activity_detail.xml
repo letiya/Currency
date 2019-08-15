@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_height="match_parent"
     android:layout_width="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
     >
 
     <LinearLayout
@@ -24,7 +24,7 @@
             android:layout_margin="10dp">
 
             <TextView
-                android:id="@+id/tv_balance"
+                android:id="@+id/tv_balance_label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:paddingLeft="10dp"
@@ -32,11 +32,29 @@
                 />
 
             <TextView
+                android:id="@+id/tv_balance_amount_sign"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintRight_toLeftOf="@id/tv_balance_amount"
+                android:text="$"
+                />
+
+            <TextView
+                android:id="@+id/tv_balance_amount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintRight_toLeftOf="@id/tv_balance_amount_unit"
+                android:paddingLeft="5dp"
+                tools:text="1000"
+                />
+
+            <TextView
+                android:id="@+id/tv_balance_amount_unit"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 app:layout_constraintRight_toRightOf="parent"
-                android:layout_marginStart="10dp"
-                android:text="$1000 (EUR)"
+                android:paddingLeft="5dp"
+                tools:text="(EUR)"
                 />
 
         </android.support.constraint.ConstraintLayout>
@@ -47,7 +65,7 @@
             android:layout_margin="10dp">
 
             <TextView
-                android:id="@+id/tv_avg_cost"
+                android:id="@+id/tv_avg_cost_label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:paddingLeft="10dp"
@@ -55,11 +73,29 @@
                 />
 
             <TextView
+                android:id="@+id/tv_avg_cost_sign"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintRight_toLeftOf="@id/tv_avg_cost_amount"
+                android:text="$"
+                />
+
+            <TextView
+                android:id="@+id/tv_avg_cost_amount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintRight_toLeftOf="@id/tv_avg_cost_amount_unit"
+                android:paddingLeft="5dp"
+                tools:text="0.9912"
+                />
+
+            <TextView
+                android:id="@+id/tv_avg_cost_amount_unit"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 app:layout_constraintRight_toRightOf="parent"
-                android:layout_marginStart="10dp"
-                android:text="$0.9912 (USD)"
+                android:paddingLeft="5dp"
+                tools:text="(USD)"
                 />
 
         </android.support.constraint.ConstraintLayout>
@@ -70,7 +106,7 @@
             android:layout_margin="10dp">
 
             <TextView
-                android:id="@+id/tv_suggest_amount"
+                android:id="@+id/tv_suggest_amount_label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:paddingLeft="10dp"
@@ -78,11 +114,29 @@
                 />
 
             <TextView
+                android:id="@+id/tv_suggest_amount_sign"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintRight_toLeftOf="@id/tv_suggest_amount"
+                android:text="$"
+                />
+
+            <TextView
+                android:id="@+id/tv_suggest_amount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:layout_constraintRight_toLeftOf="@id/tv_suggest_amount_unit"
+                android:paddingLeft="5dp"
+                tools:text="200"
+                />
+
+            <TextView
+                android:id="@+id/tv_suggest_amount_unit"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 app:layout_constraintRight_toRightOf="parent"
-                android:layout_marginStart="10dp"
-                android:text="$200 (USD)"
+                android:paddingLeft="5dp"
+                tools:text="(USD)"
                 />
 
         </android.support.constraint.ConstraintLayout>

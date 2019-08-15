@@ -29,4 +29,13 @@ public class Util {
         cal.set(Calendar.MILLISECOND, 0);
         return cal.getTime();
     }
+
+    public static boolean isNumber(String s) {
+        try {
+            Float.parseFloat(s);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
 }
